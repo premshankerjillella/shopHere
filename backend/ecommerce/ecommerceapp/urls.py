@@ -3,7 +3,8 @@ from . import views
 from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
-    path('index/', views.index, name="index")
+    path('index/', views.index, name="index"),
+    path('register/', views.register, name='register')
 ]
 
 
