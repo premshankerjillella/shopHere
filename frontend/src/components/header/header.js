@@ -1,22 +1,39 @@
 import React from 'react';
+import { fade, makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import InputBase from '@material-ui/core/InputBase';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import Badge from '@material-ui/core/Badge';
+import MenuItem from '@material-ui/core/MenuItem';
+import Menu from '@material-ui/core/Menu';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
-
+import AccountCircle from '@material-ui/icons/AccountCircle';
+import MailIcon from '@material-ui/icons/Mail';
+import NotificationsIcon from '@material-ui/icons/Notifications';
+import MoreIcon from '@material-ui/icons/MoreVert';
+import Button from '@material-ui/core/Button';
+import AppsIcon from '@material-ui/icons/Apps'
+import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+import {
+  Link,
+  useHistory
+} from 'react-router-dom';
+import './header.css';
+import { useAuth, AuthProvider } from '../../AuthContext'
+import {useCart} from '../../CartContext'
+import {useAppTheme } from '../../AppThemeContext'
+import Brightness2Icon from '@material-ui/icons/Brightness2';
 const useStyles = makeStyles((theme) => ({
-  root: {
+  grow: {
     flexGrow: 1,
   },
   menuButton: {
     marginRight: theme.spacing(2),
   },
   title: {
-    flexGrow: 1,
     display: 'none',
     [theme.breakpoints.up('sm')]: {
       display: 'block',
@@ -29,10 +46,11 @@ const useStyles = makeStyles((theme) => ({
     '&:hover': {
       backgroundColor: fade(theme.palette.common.white, 0.25),
     },
+    marginRight: theme.spacing(2),
     marginLeft: 0,
     width: '100%',
     [theme.breakpoints.up('sm')]: {
-      marginLeft: theme.spacing(1),
+      marginLeft: theme.spacing(3),
       width: 'auto',
     },
   },
@@ -54,32 +72,98 @@ const useStyles = makeStyles((theme) => ({
     paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
     transition: theme.transitions.create('width'),
     width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      width: '12ch',
-      '&:focus': {
-        width: '20ch',
-      },
+    [theme.breakpoints.up('md')]: {
+      width: '20ch',
+    },
+  },
+  sectionDesktop: {
+    display: 'none',
+    [theme.breakpoints.up('md')]: {
+      display: 'flex',
+    },
+  },
+  sectionMobile: {
+    display: 'flex',
+    [theme.breakpoints.up('md')]: {
+      display: 'none',
     },
   },
 }));
 
-export default function SearchAppBar() {
+export default function Header() {
   const classes = useStyles();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
+  const isMenuOpen = Boolean(anchorEl);
+  const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+  const useAuthHere = useAuth();
+  const history = useHistory();
+  const useCartHere = useCart();
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  function logout(){
+    useAuthHere.logout();
+    history.push("/")
+  }
+  function signin(){
+    history.push("/signin")
+  }
+  const themeHere = useAppTheme();
+  const menuId = 'primary-search-account-menu';
+  const renderMenu = (
+    <Menu
+      anchorEl={anchorEl}
+      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      id={menuId}
+      keepMounted
+      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      open={isMenuOpen}
+      onClose={handleMenuClose}
+    >
+      {
+        useAuthHere.user ? <MenuItem onClick={handleMenuClose}>{useAuthHere.user.username}</MenuItem>:""
+
+      }
+      {
+        !useAuthHere.user ? <MenuItem onClick={()=>{signin(); handleMenuClose()}}>Signin</MenuItem> :""
+
+      }
+      {
+        useAuthHere.user ? <MenuItem onClick={()=>{logout(); handleMenuClose()}}>Logout</MenuItem> :""
+
+      }
+      <MenuItem onClick={()=>{themeHere.toggleAppTheme(); handleMenuClose()}}>Toggle Theme{
+        themeHere.appTheme.palette.type =='light' ? <Brightness2Icon/> : <Brightness2Icon/>
+      }</MenuItem>
+    </Menu>
+  );
+  // let historyCounter = 0;
+  function onSearchSubmit(event){
+    if (event.key === 'Enter') {
+      history.replace("/items?q="+event.target.value)
+    }
+  }
   return (
-    <div className={classes.root}>
+    <div className={classes.grow}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
-            edge="start"
-            className={classes.menuButton}
-            color="inherit"
-            aria-label="open drawer"
-          >
-            <MenuIcon />
-          </IconButton>
+          <Link to="/">
+            <IconButton
+              edge="start"
+              className={classes.menuButton}
+              color="inherit"
+              aria-label="open drawer"
+            >
+              <AppsIcon />
+            </IconButton>
+          </Link>
           <Typography className={classes.title} variant="h6" noWrap>
-            MobX Shop
+            Ecommerce
           </Typography>
           <div className={classes.search}>
             <div className={classes.searchIcon}>
@@ -91,11 +175,45 @@ export default function SearchAppBar() {
                 root: classes.inputRoot,
                 input: classes.inputInput,
               }}
+              onKeyUp={onSearchSubmit}
               inputProps={{ 'aria-label': 'search' }}
             />
           </div>
+          <div className={classes.grow} />
+          <div className={classes.sectionDesktop}>
+          <Link to="/departments/electronics">
+            <Button variant="contained" color="primary">
+              DEPARTMENTS
+            </Button>
+            </Link>
+            <Link to="/cart">
+            
+            <IconButton
+              edge="end"
+              aria-label="account of current user"
+              aria-controls={menuId}
+              aria-haspopup="true"
+              color="inherit"
+            >
+            <Badge badgeContent={useCartHere.cart.length} color="secondary">
+              <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+            </Link>
+\            <IconButton
+              edge="end"
+              aria-label="account of current user"
+              aria-controls={menuId}
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}
+              color="inherit"
+            >
+              <MoreIcon />
+            </IconButton>
+          </div>
         </Toolbar>
       </AppBar>
+      {renderMenu}
     </div>
   );
 }

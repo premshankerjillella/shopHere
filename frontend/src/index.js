@@ -3,11 +3,22 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {  AuthProvider } from './AuthContext'
+import { CartProvider } from './CartContext'
+import {CssBaseline} from '@material-ui/core'
+import {useAppTheme , AppThemeProvider} from './AppThemeContext'
 
+// const [darkMode, setDarkMode] = useState(true);
+  
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <AuthProvider>
+      <CartProvider>
+      <AppThemeProvider>
+        <CssBaseline />
+        <App />
+      </AppThemeProvider>
+      </CartProvider>
+      </AuthProvider>,
   document.getElementById('root')
 );
 
